@@ -19,19 +19,32 @@ class Plebs:                # Initialize the plebs
         self.x, self.y, self.w, self.h = coords         # Initalize coords
         self.hitbox = (self.x, self.y, self.w, self.h)  # Set up location
         self.vel = 10                                   # How fast the player moves
-        self.sprites = self.make_my_sprites(['images/option_0.png', 'images/option_1.png'], '#00FF31')
+        self.left_or_right = 0      # Left = 0, Right = 1
+        #'''
+        self.sprites = self.make_my_sprites(['images/option_1_sprites/option_1_0.png',
+                                             'images/option_1_sprites/option_1_1.png',
+                                             'images/option_1_sprites/option_1_2.png'], '#00FF31', use_og=True)
+        #'''
+        '''
+        self.sprites = self.make_my_sprites(['images/option_0_sprites/option_0_0.png',
+                                             'images/option_0_sprites/option_0_1.png',
+                                             'images/option_0_sprites/option_0_2.png'], '#00FF31', use_og=True)
+        '''
         print("This is pleb[{}]".format(id))
 
-    def make_my_sprites(self, sprite_images, color_tint):
+    def make_my_sprites(self, sprite_images, color_tint, use_og=False):
 
         my_sprites = []
         for image in sprite_images:
-            my_png = self.image_tint(image, color_tint)
-            png_mode = my_png.mode
-            png_size = my_png.size
-            png_data = my_png.tobytes()
-            my_sprites.append(pygame.image.fromstring(png_data, png_size,
-                                                      png_mode).convert_alpha())  # Convert alpha makes it run faster?
+            if not use_og:          # Using color tint
+                my_png = self.image_tint(image, color_tint)
+                png_mode = my_png.mode
+                png_size = my_png.size
+                png_data = my_png.tobytes()
+                my_sprites.append(pygame.image.fromstring(png_data, png_size,
+                                                          png_mode).convert_alpha())  # Convert alpha makes it run faster?
+            else:       # Use original sprite
+                my_sprites.append(pygame.image.load(image).convert_alpha())
         return my_sprites
 
     def image_tint(self, source_path, tint='#ffffff'):
@@ -99,9 +112,11 @@ class Plebs:                # Initialize the plebs
 
         elif move == 1:             # go left
             self.x -= self.vel
+            self.left_or_right = 0  # Facing left now
 
         elif move == 2:             # go right
             self.x += self.vel
+            self.left_or_right = 1  # Facing right now
 
         elif move == 3:             # go up
             self.y -= self.vel
@@ -116,6 +131,9 @@ class Plebs:                # Initialize the plebs
     def draw(self, window, frames):
         #window.blit(self.sprites[0], (self.x, self.y))
 
-        window.blit(pygame.transform.flip(
-            (pygame.transform.scale(self.sprites[frames % len(self.sprites)], (self.w, self.h))),
-            True, False), (self.x, self.y))
+        if self.left_or_right == 1:     # Right
+            window.blit(pygame.transform.flip(
+                (pygame.transform.scale(self.sprites[frames % len(self.sprites)], (self.w, self.h))),
+                True, False), (self.x, self.y))
+        else:       # Facing left
+            window.blit(pygame.transform.scale(self.sprites[frames % len(self.sprites)], (self.w, self.h)), (self.x, self.y))

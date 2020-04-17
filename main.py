@@ -96,7 +96,7 @@ class Game:
         :return:
         '''
         frames = 0
-
+        counter = 0
         while not self.crash:                   # Keep going while the game hasn't ended.
             self.clock.tick(60)                 # Frames per second
             for event in pygame.event.get():    # Get game close event - if user closes game window
@@ -113,10 +113,15 @@ class Game:
             # Draw everything on screen once per frame
             self.draw_window(frames)
 
-            frames += 1
+            counter += 1
+            if counter == 5:
+                counter = 0
+                frames += 1
+                if frames == 10:
+                    frames = 0
 
     def draw_window(self, frames):
-        self.window.fill((0, 0, 0))  # Screen Color fill
+        self.window.fill((100, 100, 100))  # Screen Color fill
         # Draw stuff here
         self.plebs.draw(self.window, frames)
         pygame.display.update()
