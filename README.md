@@ -7,6 +7,13 @@ Later will develop AI for this project.
 * `pip install pygame`
 * `pip install pillow`
 
+# Note:
+* When making sprites:
+    - Png Dimensions: Height = 315, Width = 280
+    - Characters - Must be facing the left - or looking to the left initially.
+    - Create a basic template first before applying colors or styling.
+    - Make sure the background is transparent.
+
 # Resources:
 * Base format for setting up game - Will use later for network visualization
     * https://github.com/jor25/Network_Visualizer
