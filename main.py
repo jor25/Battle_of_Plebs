@@ -5,6 +5,7 @@ import numpy as np
 import pygame
 import plebs as pbs
 import sys
+from configs import *
 
 
 # Game class to manage game settings
@@ -19,7 +20,11 @@ class Game:
         self.clock = pygame.time.Clock()
 
         # Initialize player/AI down here.
-        self.plebs = pbs.Plebs(0, [200, 425, 90, 100])                   # [x,y,w,h]
+        #self.plebs = pbs.Plebs(0, [200, 425, 90, 100])                   # [x,y,w,h]
+        self.plebs = [pbs.Plebs(i, [200*i, 425, 93, 105], ALL_SPRITES[i]) for i in range(num_players)]     #280, 315
+
+        # These plebs are just for display on the main menu
+        self.display_plebs = [pbs.Plebs(i, [self.screen_w/2.5 + 100 * i, self.screen_h/4, int(93*.7), int(105*.7)], ALL_SPRITES[i]) for i in range(num_players)]
 
     def options(self):
         running = True
@@ -47,6 +52,8 @@ class Game:
     def main_menu(self):
         # Make the main menu screen
         running = True
+        frames = 0
+        counter = 0
         while running:
 
             self.clock.tick(60)
@@ -65,11 +72,26 @@ class Game:
 
             mx, my = pygame.mouse.get_pos()
 
+            # Doing some drawing for the main menu specifically
             self.window.fill((0, 0, 0))
             self.display_text('main menu', 20, 20)                                          # Display main menu
+            self.display_text("Character Options:", self.screen_w*.4, self.screen_h*.15)
             self.make_button("Play Game", mx, my, 50, 100, 200, 50, click, self.run)        # Play - x, y, w, h
             self.make_button("Options", mx, my, 50, 200, 200, 50, click, self.options)      # Options - x, y, w, h
             self.make_button("Exit", mx, my, 50, 300, 200, 50, click, self.exit)            # Exit
+
+            # Used to display specific plebs
+            for pleb in self.display_plebs:
+                self.make_button(" ", mx, my, pleb.x, pleb.y, pleb.w, pleb.h, click, self.run)
+                pleb.draw(self.window, frames)
+
+
+            counter += 1
+            if counter == 5:
+                counter = 0
+                frames += 1
+                if frames == 10:
+                    frames = 0
             pygame.display.update()
 
 
@@ -92,7 +114,7 @@ class Game:
 
     def run(self):
         '''
-        Run the game to show network.
+        Run the game to show characters.
         :return:
         '''
         frames = 0
@@ -108,8 +130,10 @@ class Game:
                         self.main_menu()                    # Go to main menu
 
             # Do Moves here
-            move = self.plebs.active_player()
-            self.plebs.do_move(move)
+            for pleb in self.plebs:
+                move = pleb.active_player()
+                pleb.do_move(move)
+
             # Draw everything on screen once per frame
             self.draw_window(frames)
 
@@ -123,14 +147,16 @@ class Game:
     def draw_window(self, frames):
         self.window.fill((100, 100, 100))  # Screen Color fill
         # Draw stuff here
-        self.plebs.draw(self.window, frames)
+        for pleb in self.plebs:
+            pleb.draw(self.window, frames)
+
         pygame.display.update()
 
 
 if __name__ == '__main__':
     print("Battle of Plebs")
     pygame.init()               # Initialize the pygame instance
-    game = Game(800, 600, 1)    # Initialize Game object
+    game = Game(800, 600, len(ALL_SPRITES))    # Initialize Game object
     game.main_menu()
     #game.run()                  # Run the game
 
