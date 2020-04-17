@@ -20,16 +20,16 @@ class Plebs:                # Initialize the plebs
         self.hitbox = (self.x, self.y, self.w, self.h)  # Set up location
         self.vel = 10                                   # How fast the player moves
         self.left_or_right = 0      # Left = 0, Right = 1
-        #'''
+        '''
         self.sprites = self.make_my_sprites(['images/option_1_sprites/option_1_0.png',
                                              'images/option_1_sprites/option_1_1.png',
                                              'images/option_1_sprites/option_1_2.png'], '#00FF31', use_og=True)
         #'''
-        '''
+        #'''
         self.sprites = self.make_my_sprites(['images/option_0_sprites/option_0_0.png',
                                              'images/option_0_sprites/option_0_1.png',
                                              'images/option_0_sprites/option_0_2.png'], '#00FF31', use_og=True)
-        '''
+        #'''
         print("This is pleb[{}]".format(id))
 
     def make_my_sprites(self, sprite_images, color_tint, use_og=False):
