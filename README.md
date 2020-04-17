@@ -20,3 +20,6 @@ Later will develop AI for this project.
 
 * Make a generic main menu:
     * https://www.youtube.com/watch?v=0RryiSjpJn0
+    
+* Generate cool text for title:
+    * https://cooltext.com/Logo-Design-Epic-Stone

@@ -19,9 +19,10 @@ class Game:
         self.font = pygame.font.SysFont(None, 40)                       # Initialize a font
         self.clock = pygame.time.Clock()
 
+        self.title_sprite = pygame.image.load(TITLE).convert_alpha()        # Load the title image
         # Initialize player/AI down here.
         #self.plebs = pbs.Plebs(0, [200, 425, 90, 100])                   # [x,y,w,h]
-        self.plebs = [pbs.Plebs(i, [200*i, 425, 93, 105], ALL_SPRITES[i]) for i in range(num_players)]     #280, 315
+        self.plebs = [pbs.Plebs(i, [100+100*i, 425, 93, 105], ALL_SPRITES[i]) for i in range(num_players)]     #280, 315
 
         # These plebs are just for display on the main menu
         self.display_plebs = [pbs.Plebs(i, [self.screen_w/2.5 + 100 * i, self.screen_h/4, int(93*.7), int(105*.7)], ALL_SPRITES[i]) for i in range(num_players)]
@@ -74,8 +75,11 @@ class Game:
 
             # Doing some drawing for the main menu specifically
             self.window.fill((0, 0, 0))
-            self.display_text('main menu', 20, 20)                                          # Display main menu
-            self.display_text("Character Options:", self.screen_w*.4, self.screen_h*.15)
+
+            # Display the Title
+            self.window.blit(pygame.transform.scale(self.title_sprite, (800, 100)), (self.screen_w/4, 20))
+            self.display_text('Main Menu', 50, 50)                                          # Display main menu
+            self.display_text("Character Options:", self.screen_w*.4, self.screen_h*.18)
             self.make_button("Play Game", mx, my, 50, 100, 200, 50, click, self.run)        # Play - x, y, w, h
             self.make_button("Options", mx, my, 50, 200, 200, 50, click, self.options)      # Options - x, y, w, h
             self.make_button("Exit", mx, my, 50, 300, 200, 50, click, self.exit)            # Exit
@@ -156,7 +160,7 @@ class Game:
 if __name__ == '__main__':
     print("Battle of Plebs")
     pygame.init()               # Initialize the pygame instance
-    game = Game(800, 600, len(ALL_SPRITES))    # Initialize Game object
+    game = Game(1200, 700, len(ALL_SPRITES))    # Initialize Game object
     game.main_menu()
     #game.run()                  # Run the game
 
