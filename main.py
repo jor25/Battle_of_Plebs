@@ -6,7 +6,7 @@ import pygame
 import plebs as pbs
 import sys
 from configs import *
-
+import obstacles as obs
 
 # Game class to manage game settings
 class Game:
@@ -17,9 +17,12 @@ class Game:
         self.window = pygame.display.set_mode((screen_w, screen_h))     # Game window
         self.crash = False                                              # When to shut down the game
         self.font = pygame.font.SysFont(None, 40)                       # Initialize a font
-        self.clock = pygame.time.Clock()
+        self.clock = pygame.time.Clock()                                # Set Game clock
+        self.title_sprite = pygame.image.load(TITLE).convert_alpha()    # Load the title image
 
-        self.title_sprite = pygame.image.load(TITLE).convert_alpha()        # Load the title image
+        # Set some walls
+        self.walls = [obs.Obstacles(0, [0, 0+(self.screen_h-WALL_WIDTH)*i, self.screen_w, WALL_WIDTH]) for i in range(2)] + \
+                     [obs.Obstacles(0, [0+(self.screen_w-WALL_WIDTH)*i, 0, WALL_WIDTH, self.screen_h]) for i in range(2)]
         # Initialize player/AI down here.
         #self.plebs = pbs.Plebs(0, [200, 425, 90, 100])                   # [x,y,w,h]
         self.plebs = [pbs.Plebs(i, [100+100*i, 425, 93, 105], ALL_SPRITES[i]) for i in range(num_players)]     #280, 315
@@ -137,6 +140,9 @@ class Game:
             for pleb in self.plebs:
                 move = pleb.active_player()
                 pleb.do_move(move)
+                collision = pleb.check_collision(self.walls)  # Check this move to see if it collided
+                if collision:               # Collided with a wall
+                    pleb.undo_move(move)    # Undo what you did, knock back
 
             # Draw everything on screen once per frame
             self.draw_window(frames)
@@ -151,6 +157,9 @@ class Game:
     def draw_window(self, frames):
         self.window.fill((100, 100, 100))  # Screen Color fill
         # Draw stuff here
+        for block in self.walls:
+            block.draw(self.window)
+
         for pleb in self.plebs:
             pleb.draw(self.window, frames)
 
@@ -160,7 +169,7 @@ class Game:
 if __name__ == '__main__':
     print("Battle of Plebs")
     pygame.init()               # Initialize the pygame instance
-    game = Game(1200, 700, len(ALL_SPRITES))    # Initialize Game object
+    game = Game(SCREEN_WIDTH, SCREEN_HEIGHT, len(ALL_SPRITES))    # Initialize Game object
     game.main_menu()
     #game.run()                  # Run the game
 

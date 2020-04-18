@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 from PIL.ImageColor import getcolor, getrgb
 from PIL.ImageOps import grayscale
-
+from configs import *
 
 class Plebs:                # Initialize the plebs
     def __init__(self, id, coords, my_sprites):
@@ -118,6 +118,42 @@ class Plebs:                # Initialize the plebs
 
         # Update the hitbox
         self.hitbox = (self.x, self.y, self.w, self.h)
+
+    def undo_move(self, move):
+
+        if move == 0:               # do nothing
+            pass    # Do nothing
+
+        elif move == 1:             # undo go left
+            self.x += self.vel
+
+        elif move == 2:             # undo right
+            self.x -= self.vel
+
+        elif move == 3:             # undo go up
+            self.y += self.vel
+
+        elif move == 4:             # undo go down
+            self.y -= self.vel
+
+        # Update the hitbox
+        self.hitbox = (self.x, self.y, self.w, self.h)
+
+    def check_collision(self, obsts):
+        # Check to see if the move I just made resulted in a collision - if so let me know
+        collision = False  # Haven't run into anything
+
+        for obst in obsts:
+            if obst.category == 0:   # Wall
+
+                if self.y - self.vel < obst.y + obst.h:        # Check my y coords with wall y coords
+                    if self.y + self.h > obst.y:    # Are we on a collision path?
+                        # Within hitbox x coords
+                        if self.x + self.w > obst.x:        # Check my x coords with wall
+                            if self.x < obst.x + obst.w:    # Is the wall above or below me?
+                                print("CONTACT [{}]".format(self.id))
+                                collision = True    # Did I collide with something?
+        return collision
 
 
     def draw(self, window, frames):

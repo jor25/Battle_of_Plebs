@@ -1,6 +1,11 @@
 # Hold the game settings and configurations
 # Also hold the game sprites
 
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 700
+WALL_WIDTH = 25
+
+
 TITLE = 'images/BoP_Title.png'
 # SPRITE Lists
 ALL_SPRITES = [
