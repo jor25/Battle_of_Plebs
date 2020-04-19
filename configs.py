@@ -4,6 +4,7 @@
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 700
 WALL_WIDTH = 25
+ITEM_DIM = 40
 
 
 TITLE = 'images/BoP_Title.png'

@@ -23,6 +23,8 @@ class Game:
         # Set some walls
         self.walls = [obs.Obstacles(0, [0, 0+(self.screen_h-WALL_WIDTH)*i, self.screen_w, WALL_WIDTH]) for i in range(2)] + \
                      [obs.Obstacles(0, [0+(self.screen_w-WALL_WIDTH)*i, 0, WALL_WIDTH, self.screen_h]) for i in range(2)]
+
+        self.items = [obs.Obstacles(1, [400, 100+100*i, ITEM_DIM, ITEM_DIM]) for i in range(2)]
         # Initialize player/AI down here.
         #self.plebs = pbs.Plebs(0, [200, 425, 90, 100])                   # [x,y,w,h]
         self.plebs = [pbs.Plebs(i, [100+100*i, 425, 93, 105], ALL_SPRITES[i]) for i in range(num_players)]     #280, 315
@@ -140,9 +142,25 @@ class Game:
             for pleb in self.plebs:
                 move = pleb.active_player()
                 pleb.do_move(move)
-                collision = pleb.check_collision(self.walls)  # Check this move to see if it collided
+                collision, wall_ind = pleb.check_collision(self.walls)  # Check this move to see if it collided
                 if collision:               # Collided with a wall
                     pleb.undo_move(move)    # Undo what you did, knock back
+
+                '''
+                # Pleb collision
+                collision = pleb.check_collision(self.plebs)  # Check this move to see if it collided with other plebs
+                if collision:               # Collided with a wall
+                    pleb.undo_move(move)    # Undo what you did, knock back
+                '''
+                # Item collision
+                collision, item_ind = pleb.check_collision(self.items)  # Check this move to see if it collided with an item
+                if collision and move == 5:               # Collided item and move is space, pick up item
+                    # Pick Up Item
+                    print("contact with item")
+                    #self.items[item_ind].item_picked_up()   # This item was picked up
+                    pleb.pick_up(self.items[item_ind])
+                elif move == 5:
+                    pleb.set_down()     # Set down item?
 
             # Draw everything on screen once per frame
             self.draw_window(frames)
@@ -161,7 +179,11 @@ class Game:
             block.draw(self.window)
 
         for pleb in self.plebs:
-            pleb.draw(self.window, frames)
+            pleb.draw(self.window, frames)  # Draws the plebs and their items
+
+        for item in self.items:             # Draw the items last so that the players can pick them up
+            if not item.picked_up:          # Draw at the front if not picked up
+                item.draw(self.window)
 
         pygame.display.update()
 

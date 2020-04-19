@@ -16,12 +16,14 @@ class Plebs:                # Initialize the plebs
         :param coords: list of integers in the format of [x,y,w,h]
         '''
         self.id = id        # Player's ID number
+        self.category = -1  # Indicate this is a pleb
         self.x, self.y, self.w, self.h = coords         # Initalize coords
         self.hitbox = (self.x, self.y, self.w, self.h)  # Set up location
         self.vel = 10                                   # How fast the player moves
         self.left_or_right = 0      # Left = 0, Right = 1
         # Creates a bunch of sprites
         self.sprites = self.make_my_sprites(my_sprites, '#00FF31', use_og=True)
+        self.my_items = []          # The items I have
         print("This is pleb[{}]".format(id))
 
     def make_my_sprites(self, sprite_images, color_tint, use_og=False):
@@ -95,6 +97,10 @@ class Plebs:                # Initialize the plebs
         elif keys[pygame.K_DOWN]:
             move = 4
 
+        # Pick up/set down
+        elif keys[pygame.K_SPACE]:
+            move = 5
+
         return move     # Move from player
 
     def do_move(self, move):
@@ -119,12 +125,20 @@ class Plebs:                # Initialize the plebs
         # Update the hitbox
         self.hitbox = (self.x, self.y, self.w, self.h)
 
+        # Update hitbox of my item(s)
+        for item in self.my_items:
+            # Calculate coordinates for item placement
+            x_item = (self.x + self.w) - item.w     # Get x coordinate in relation to pleb
+            y_item = (self.y + self.h) - item.h     # Get y coordinate in relation to pleb
+            item.x = x_item     # Update x coord
+            item.y = y_item     # Update y coord
+            item.hitbox = (x_item, y_item, item.w, item.h)      # Item hitbox updated
+            if item.held_for > 0:
+                item.held_for -= 1      # Subtract from timer until zero
+
+
     def undo_move(self, move):
-
-        if move == 0:               # do nothing
-            pass    # Do nothing
-
-        elif move == 1:             # undo go left
+        if move == 1:             # undo go left
             self.x += self.vel
 
         elif move == 2:             # undo right
@@ -139,21 +153,59 @@ class Plebs:                # Initialize the plebs
         # Update the hitbox
         self.hitbox = (self.x, self.y, self.w, self.h)
 
+    def pick_up(self, item):
+        # Pick up the item
+        if not item.picked_up:          # If it hasn't been picked up, time to pick it up
+            self.my_items.append(item)  # It's my item now
+            item.item_picked_up()       # This item was picked up
+            print(self.my_items)
+        else:
+            print("Item already picked up")
+
+    def set_down(self):
+        if len(self.my_items) > 0:  # Have at least one item
+            if self.my_items[0].held_for <= 0:  # Can only put down if it's zero or less
+                self.my_items[0].item_put_down()        # Put down the first item
+                print("item_location = {}".format(self.my_items[0].hitbox))
+                self.my_items.pop(0)                    # Remove the first item from my list
+                print("pleb: {}\tItems: {}".format(self.id, self.my_items))
+            else:
+                print("Hold longer")
+        else:
+            print("No items to set down")
+
+
     def check_collision(self, obsts):
         # Check to see if the move I just made resulted in a collision - if so let me know
         collision = False  # Haven't run into anything
+        index = None
 
-        for obst in obsts:
-            if obst.category == 0:   # Wall
+        for i, obst in enumerate(obsts):
+            if self.y < obst.y + obst.h:        # Check my y coords with wall y coords
+                if self.y + self.h > obst.y:    # Are we on a collision path?
+                    # Within hitbox x coords
+                    if self.x + self.w > obst.x:        # Check my x coords with wall
+                        if self.x < obst.x + obst.w:    # Is the wall above or below me?
 
-                if self.y - self.vel < obst.y + obst.h:        # Check my y coords with wall y coords
-                    if self.y + self.h > obst.y:    # Are we on a collision path?
-                        # Within hitbox x coords
-                        if self.x + self.w > obst.x:        # Check my x coords with wall
-                            if self.x < obst.x + obst.w:    # Is the wall above or below me?
-                                print("CONTACT [{}]".format(self.id))
+                            if obst.category == 0:      # Wall
+                                print("CONTACT [{}] with wall".format(self.id))
                                 collision = True    # Did I collide with something?
-        return collision
+                                index = i
+
+                            elif obst.category == 1:  # Item
+                                if obst.picked_up == False:         # Only collide with item if it hasn't been picked up
+                                    if obst.held_for >= obst.hold_time:          # It's been placed for at least 5 frames
+                                        print("CONTACT [{}] with item".format(self.id))
+                                        collision = True    # Did I collide with something?
+                                        index = i
+
+                            elif obst.category == -1:   # Fellow pleb
+                                if obst.id != self.id:     # this is not me
+                                    print("CONTACT [{}] with pleb!".format(self.id))
+                                    collision = True    # Did I collide with something?
+                                    index = i
+
+        return collision, index     # Let me know if I collided with something and the index of that something
 
 
     def draw(self, window, frames):
@@ -165,3 +217,9 @@ class Plebs:                # Initialize the plebs
                 True, False), (self.x, self.y))
         else:       # Facing left
             window.blit(pygame.transform.scale(self.sprites[frames % len(self.sprites)], (self.w, self.h)), (self.x, self.y))
+
+        # DEBUG
+        pygame.draw.rect(window, (0, 255, 0), self.hitbox, 2)  # Draw hit box
+
+        for item in self.my_items:      # Draw all the items I have if I have any
+            item.draw(window)
