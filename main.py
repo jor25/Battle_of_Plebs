@@ -21,10 +21,12 @@ class Game:
         self.title_sprite = pygame.image.load(TITLE).convert_alpha()    # Load the title image
 
         # Set some walls
-        self.walls = [obs.Obstacles(0, [0, 0+(self.screen_h-WALL_WIDTH)*i, self.screen_w, WALL_WIDTH]) for i in range(2)] + \
-                     [obs.Obstacles(0, [0+(self.screen_w-WALL_WIDTH)*i, 0, WALL_WIDTH, self.screen_h]) for i in range(2)]
+        self.walls = [obs.Obstacles(0, [0, 0+(self.screen_h-WALL_WIDTH)*i, self.screen_w, WALL_WIDTH], i) for i in range(2)] + \
+                     [obs.Obstacles(0, [0+(self.screen_w-WALL_WIDTH)*i, 0, WALL_WIDTH, self.screen_h], i) for i in range(2)]
 
-        self.items = [obs.Obstacles(1, [400, 100+100*i, ITEM_DIM, ITEM_DIM]) for i in range(2)]
+        self.items = [obs.Obstacles(1, [np.random.randint(100, self.screen_w - 100),
+                                        np.random.randint(100, self.screen_h - 100),
+                                        ITEM_DIM, ITEM_DIM], i) for i in range(num_players)]
         # Initialize player/AI down here.
         #self.plebs = pbs.Plebs(0, [200, 425, 90, 100])                   # [x,y,w,h]
         self.plebs = [pbs.Plebs(i, [100+100*i, 425, 93, 105], ALL_SPRITES[i]) for i in range(num_players)]     #280, 315
@@ -35,7 +37,7 @@ class Game:
     def options(self):
         running = True
         while running:
-            self.clock.tick(60)
+            self.clock.tick(FPS)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -62,7 +64,7 @@ class Game:
         counter = 0
         while running:
 
-            self.clock.tick(60)
+            self.clock.tick(FPS)
             click = False       # Reset clicks to false
 
             for event in pygame.event.get():            # Get game close event - if user closes game window
@@ -103,7 +105,6 @@ class Game:
                     frames = 0
             pygame.display.update()
 
-
     def display_text(self, text, x, y):
         text_obj = self.font.render(text, 1, (0,255,0))
         text_rect = text_obj.get_rect()
@@ -120,6 +121,14 @@ class Game:
         pygame.draw.rect(self.window, (255, 0, 0), button)  # Draw the button
         self.display_text(button_text, x, y)
 
+    def make_new_item(self):
+        for item in self.items:
+            if item.dead:   # It's exploded
+                my_id = item.id     # Set the id to replace
+                self.items[my_id] = obs.Obstacles(1, [np.random.randint(100, self.screen_w - 100),
+                                                      np.random.randint(100, self.screen_h - 100),
+                                                      ITEM_DIM, ITEM_DIM], my_id)
+                print("Initializing new item: {}".format(self.items[my_id].id))
 
     def run(self):
         '''
@@ -129,7 +138,7 @@ class Game:
         frames = 0
         counter = 0
         while not self.crash:                   # Keep going while the game hasn't ended.
-            self.clock.tick(60)                 # Frames per second
+            self.clock.tick(FPS)                 # Frames per second
             for event in pygame.event.get():    # Get game close event - if user closes game window
                 if event.type == pygame.QUIT:
                     self.crash = True           # Crash will get us out of the game loop
@@ -140,27 +149,31 @@ class Game:
 
             # Do Moves here
             for pleb in self.plebs:
-                move = pleb.active_player()
-                pleb.do_move(move)
-                collision, wall_ind = pleb.check_collision(self.walls)  # Check this move to see if it collided
-                if collision:               # Collided with a wall
-                    pleb.undo_move(move)    # Undo what you did, knock back
+                if pleb.alive:
+                    move = pleb.active_player()
+                    #move = np.random.randint(0, 6)      # Have them move randomly
+                    pleb.do_move(move)
+                    collision, wall_ind = pleb.check_collision(self.walls)  # Check this move to see if it collided
+                    if collision:               # Collided with a wall
+                        pleb.undo_move(move)    # Undo what you did, knock back
 
-                '''
-                # Pleb collision
-                collision = pleb.check_collision(self.plebs)  # Check this move to see if it collided with other plebs
-                if collision:               # Collided with a wall
-                    pleb.undo_move(move)    # Undo what you did, knock back
-                '''
-                # Item collision
-                collision, item_ind = pleb.check_collision(self.items)  # Check this move to see if it collided with an item
-                if collision and move == 5:               # Collided item and move is space, pick up item
-                    # Pick Up Item
-                    print("contact with item")
-                    #self.items[item_ind].item_picked_up()   # This item was picked up
-                    pleb.pick_up(self.items[item_ind])
-                elif move == 5:
-                    pleb.set_down()     # Set down item?
+                    '''
+                    # Pleb collision
+                    collision = pleb.check_collision(self.plebs)  # Check this move to see if it collided with other plebs
+                    if collision:               # Collided with a wall
+                        pleb.undo_move(move)    # Undo what you did, knock back
+                    '''
+                    # Item collision
+                    collision, item_ind = pleb.check_collision(self.items)  # Check this move to see if it collided with an item
+                    if collision and move == 5:               # Collided item and move is space, pick up item
+                        # Pick Up Item
+                        print("contact with item")
+                        #self.items[item_ind].item_picked_up()   # This item was picked up
+                        pleb.pick_up(self.items[item_ind])
+                    elif move == 5:
+                        pleb.set_down()     # Set down item?
+
+            self.make_new_item()    # Look through for any dead items and reset them
 
             # Draw everything on screen once per frame
             self.draw_window(frames)
@@ -179,7 +192,7 @@ class Game:
             block.draw(self.window)
 
         for pleb in self.plebs:
-            pleb.draw(self.window, frames)  # Draws the plebs and their items
+                pleb.draw(self.window, frames)  # Draws the plebs and their items
 
         for item in self.items:             # Draw the items last so that the players can pick them up
             if not item.picked_up:          # Draw at the front if not picked up
@@ -190,7 +203,7 @@ class Game:
 
 if __name__ == '__main__':
     print("Battle of Plebs")
-    pygame.init()               # Initialize the pygame instance
+
     game = Game(SCREEN_WIDTH, SCREEN_HEIGHT, len(ALL_SPRITES))    # Initialize Game object
     game.main_menu()
     #game.run()                  # Run the game

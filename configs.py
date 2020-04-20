@@ -1,11 +1,16 @@
 # Hold the game settings and configurations
 # Also hold the game sprites
+import pygame
+
+pygame.init()  # Initialize the pygame instance
 
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 700
 WALL_WIDTH = 25
 ITEM_DIM = 40
+FPS = 60
 
+SIMP_FONT = pygame.font.SysFont(None, 40)  # Initialize a font  # Obstacle countdown timer
 
 TITLE = 'images/BoP_Title.png'
 # SPRITE Lists

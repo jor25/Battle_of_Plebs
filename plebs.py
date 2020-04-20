@@ -24,6 +24,7 @@ class Plebs:                # Initialize the plebs
         # Creates a bunch of sprites
         self.sprites = self.make_my_sprites(my_sprites, '#00FF31', use_og=True)
         self.my_items = []          # The items I have
+        self.alive = True           # While alive
         print("This is pleb[{}]".format(id))
 
     def make_my_sprites(self, sprite_images, color_tint, use_og=False):
@@ -132,9 +133,14 @@ class Plebs:                # Initialize the plebs
             y_item = (self.y + self.h) - item.h     # Get y coordinate in relation to pleb
             item.x = x_item     # Update x coord
             item.y = y_item     # Update y coord
+            item.pre_x = x_item
+            item.pre_y = y_item
             item.hitbox = (x_item, y_item, item.w, item.h)      # Item hitbox updated
             if item.held_for > 0:
                 item.held_for -= 1      # Subtract from timer until zero
+
+            if item.exploding:  # If it's exploding, automatically DROP IT
+                self.set_down()
 
 
     def undo_move(self, move):
@@ -193,11 +199,18 @@ class Plebs:                # Initialize the plebs
                                 index = i
 
                             elif obst.category == 1:  # Item
-                                if obst.picked_up == False:         # Only collide with item if it hasn't been picked up
-                                    if obst.held_for >= obst.hold_time:          # It's been placed for at least 5 frames
-                                        print("CONTACT [{}] with item".format(self.id))
-                                        collision = True    # Did I collide with something?
+                                if not obst.dead:
+                                    if obst.picked_up == False and not obst.exploding:         # Only collide with item if it hasn't been picked up
+                                        if obst.held_for >= obst.hold_time:          # It's been placed for at least 5 frames
+                                            print("CONTACT [{}] with item[{}]".format(self.id, obst.id))
+                                            collision = True    # Did I collide with something?
+                                            index = i
+                                    elif obst.exploding:    # If object is exploding, check if in range of explosion
+                                        print("CONTACT [{}] with explosion[{}]".format(self.id, obst.id))
+                                        collision = True  # Did I collide with something?
                                         index = i
+                                        self.alive = False  # is dead
+                                        print("Pleb[{}] is dead".format(self.id))
 
                             elif obst.category == -1:   # Fellow pleb
                                 if obst.id != self.id:     # this is not me
@@ -210,16 +223,16 @@ class Plebs:                # Initialize the plebs
 
     def draw(self, window, frames):
         #window.blit(self.sprites[0], (self.x, self.y))
+        if self.alive:
+            if self.left_or_right == 1:     # Right
+                window.blit(pygame.transform.flip(
+                    (pygame.transform.scale(self.sprites[frames % len(self.sprites)], (self.w, self.h))),
+                    True, False), (self.x, self.y))
+            else:       # Facing left
+                window.blit(pygame.transform.scale(self.sprites[frames % len(self.sprites)], (self.w, self.h)), (self.x, self.y))
 
-        if self.left_or_right == 1:     # Right
-            window.blit(pygame.transform.flip(
-                (pygame.transform.scale(self.sprites[frames % len(self.sprites)], (self.w, self.h))),
-                True, False), (self.x, self.y))
-        else:       # Facing left
-            window.blit(pygame.transform.scale(self.sprites[frames % len(self.sprites)], (self.w, self.h)), (self.x, self.y))
-
-        # DEBUG
-        pygame.draw.rect(window, (0, 255, 0), self.hitbox, 2)  # Draw hit box
+            # DEBUG
+            pygame.draw.rect(window, (0, 255, 0), self.hitbox, 2)  # Draw hit box
 
         for item in self.my_items:      # Draw all the items I have if I have any
             item.draw(window)
