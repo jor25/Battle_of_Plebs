@@ -23,3 +23,6 @@ Later will develop AI for this project.
     
 * Generate cool text for title:
     * https://cooltext.com/Logo-Design-Epic-Stone
+    
+* *args and **kwargs
+    * https://www.geeksforgeeks.org/args-kwargs-python/
